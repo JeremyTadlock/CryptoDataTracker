@@ -22,9 +22,11 @@ order_book_data = {coin: [] for coin in COINS}  # Separate order book snapshots 
 BASE_DIR = "D:/coin_data"
 os.makedirs(BASE_DIR, exist_ok=True)
 for coin in COINS:
-    # split coin data between market hours and after hours US
-    os.makedirs(os.path.join(BASE_DIR, coin, "normal_trading_hours"), exist_ok=True)
-    os.makedirs(os.path.join(BASE_DIR, coin, "after_hours"), exist_ok=True)
+    # Split coin data between market hours and after hours US
+    os.makedirs(os.path.join(BASE_DIR, coin, "normal_trading_hours", "trade_data"), exist_ok=True)
+    os.makedirs(os.path.join(BASE_DIR, coin, "normal_trading_hours", "order_book"), exist_ok=True)
+    os.makedirs(os.path.join(BASE_DIR, coin, "after_hours", "trade_data"), exist_ok=True)
+    os.makedirs(os.path.join(BASE_DIR, coin, "after_hours", "order_book"), exist_ok=True)
 
 last_trade_time = {coin: None for coin in COINS}  # Tracks the last trade time for each coin
 
@@ -38,7 +40,7 @@ def save_numpy_array(data, folder, filename_prefix):
 def get_est_now():
     return datetime.now(timezone("US/Eastern"))
 
-def is_normal_trading_hours(timestamp): # Check if a timestamp is during normal trading hours (9 AM - 4 PM EST)
+def is_normal_trading_hours(timestamp):  # Check if a timestamp is during normal trading hours (9 AM - 4 PM EST)
     start = timestamp.replace(hour=9, minute=0, second=0, microsecond=0)
     end = timestamp.replace(hour=16, minute=0, second=0, microsecond=0)
     return start <= timestamp <= end
@@ -53,18 +55,19 @@ def save_data_periodically():
 
                 est_now = get_est_now()
                 folder = "normal_trading_hours" if is_normal_trading_hours(est_now) else "after_hours"
-                coin_folder = os.path.join(BASE_DIR, coin, folder)
 
                 # Normal trade data with timestamps
                 if trade_data[coin]:
+                    trade_folder = os.path.join(BASE_DIR, coin, folder, "trade_data")
                     trade_array = np.array(trade_data[coin], dtype=object)
-                    save_numpy_array(trade_array, coin_folder, "trade_data")
+                    save_numpy_array(trade_array, trade_folder, "trade_data")
                     trade_data[coin].clear()
 
-                # book snapshot with timestampz
+                # Book snapshot with timestamps
                 if order_book_data[coin]:
+                    order_book_folder = os.path.join(BASE_DIR, coin, folder, "order_book")
                     order_book_array = np.array(order_book_data[coin], dtype=object)
-                    save_numpy_array(order_book_array, coin_folder, "order_book")
+                    save_numpy_array(order_book_array, order_book_folder, "order_book")
                     order_book_data[coin].clear()
 
 # WebSocket functions
