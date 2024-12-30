@@ -135,6 +135,11 @@ def start_websocket():
     )
     ws.run_forever()
 
+# save json marker showing data saving session ended
+def on_exit():
+    with open(os.path.join(BASE_DIR, "session_end.json"), "w") as f:
+        json.dump({"end_time": datetime.now().strftime("%Y%m%d_%H%M%S")}, f)
+
 # Main
 def main():
     # Start the WebSocket listener in a background thread
