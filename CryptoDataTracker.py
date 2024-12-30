@@ -45,6 +45,18 @@ def is_normal_trading_hours(timestamp):  # Check if a timestamp is during normal
     end = timestamp.replace(hour=16, minute=0, second=0, microsecond=0)
     return start <= timestamp <= end
 
+# Write session start and end marker when the program exits.
+def save_session_end():
+    session_metadata_file = os.path.join(BASE_DIR, "session_metadata.json")
+    session_metadata = {
+        "start_time": SESSION_START_TIME,
+        "end_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    }
+    with open(session_metadata_file, "w") as f:
+        json.dump(session_metadata, f)
+    print(f"[INFO] Session metadata saved to {session_metadata_file}")
+
+
 def save_data_periodically():
     while True:
         threading.Event().wait(1800)  # Wait 30 minutes between each data save
@@ -135,11 +147,6 @@ def start_websocket():
     )
     ws.run_forever()
 
-# save json marker showing data saving session ended
-def on_exit():
-    with open(os.path.join(BASE_DIR, "session_end.json"), "w") as f:
-        json.dump({"end_time": datetime.now().strftime("%Y%m%d_%H%M%S")}, f)
-
 # Main
 def main():
     # Start the WebSocket listener in a background thread
@@ -156,6 +163,6 @@ def main():
             threading.Event().wait(1)
     except KeyboardInterrupt:
         print("Exiting program.")
-
+        save_session_end()
 if __name__ == "__main__":
     main()
